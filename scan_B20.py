@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from mpi4py import MPI
 from neat.fields import StellnaQS
 from neat.tracing import ChargedParticleEnsemble, ParticleEnsembleOrbit, ParticleOrbit, ChargedParticle
+
+### Make a single particle orbit of a super banana
+# For B=B00+B10cos(theta), E/μ of super bananas ≈ B00 + 0.8B10.
+
 ## INPUT PARAMETERS
 Rmajor_ARIES = 7.7495  # Major radius double double of ARIES-CS
 Rminor_ARIES = 1.7044  # Minor radius
@@ -13,16 +17,16 @@ B0 = 5.3267  # Tesla, magnetic field on-axis
 energy = 3.52e6  # electron-volt
 charge = 2  # times charge of proton
 mass = 4  # times mass of proton
-ntheta = 15  # resolution in theta
-nphi = 7  # resolution in phi
-nlambda_trapped = 23  # number of pitch angles for trapped particles
-nlambda_passing = 6  # number of pitch angles for passing particles
-nsamples = 100000  # resolution in time
-tfinal = 1e-3  # seconds
+ntheta = 11  # resolution in theta
+nphi = 5  # resolution in phi
+nlambda_trapped = 15  # number of pitch angles for trapped particles
+nlambda_passing = 3  # number of pitch angles for passing particles
+nsamples = 10000  # resolution in time
+tfinal = 1e-4  # seconds
 nthreads = 4
-stellarator_indices = [1,2,3,4,5]
+stellarator_indices = [1,2]#[1,2,3,4,5]
 constant_b20 = False
-B20_scaling_array = np.linspace(-30,30,32)#np.logspace(-1.5, 2.0, num=12, base=10.0)
+B20_scaling_array = np.linspace(-30,30,12)#np.logspace(-1.5, 2.0, num=12, base=10.0)
 ## MPI STUFF
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -52,7 +56,7 @@ for stellarator_index in stellarator_indices:
     for i, B20_scaling in enumerate(local_B20_scaling_array):
     # for i, B20_scaling in enumerate(B20_scaling_array):
         start_time = time.time()
-        g_field.B20 = B20_scaling*basis_B20#/np.mean(basis_B20)
+        g_field.B20 = B20_scaling*(basis_B20-np.mean(basis_B20))+np.mean(basis_B20)
         local_B20_arrays.append(g_field.B20)
         g_orbits = ParticleEnsembleOrbit(g_particle_ensemble,g_field,nsamples=nsamples,tfinal=tfinal,nthreads=nthreads,constant_b20=constant_b20)
         g_orbits.loss_fraction(r_max=Rminor_ARIES, jacobian_weight=True)
